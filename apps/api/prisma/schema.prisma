@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String       @id
+  tgUserId  String
+  username  String?
+  firstName String?
+  lastName  String?
+  createdAt DateTime     @default(now())
+  memberships Membership[]
+  shifts    Shift[]
+}
+
+model Workspace {
+  id           String       @id @default(cuid())
+  type         String
+  title        String
+  ownerUserId  String
+  linkedChatId String?
+  createdAt    DateTime     @default(now())
+  memberships  Membership[]
+  jobPosts     JobPost[]
+  shifts       Shift[]
+}
+
+model Membership {
+  id          String   @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        String
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([workspaceId, userId])
+}
+
+model Invite {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  workspaceId String
+  createdById String
+  createdAt   DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model JobPost {
+  id            String   @id @default(cuid())
+  workspaceId   String
+  tgChatId      String
+  tgMessageId   String
+  authorTgUserId String?
+  text          String
+  status        String
+  extractedJson Json?
+  createdAt     DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model Shift {
+  id             String   @id @default(cuid())
+  workspaceId    String
+  userId         String
+  date           String
+  startTime      String
+  endTime        String
+  breakMin       Int
+  rate           Float
+  perksJson      Json
+  status         String
+  organizer      String
+  location       String?
+  sourceJobPostId String?
+  createdAt      DateTime @default(now())
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+}
